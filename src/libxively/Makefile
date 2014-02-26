@@ -10,7 +10,7 @@ ifeq ($(XI_NOB_ENABLED),true)
 endif
 
 ifeq ($(XI_MQTT_ENABLED),true)
-    XI_LAYER_DIRS += mqtt mqtt/codec
+    XI_LAYER_DIRS += mqtt/layer mqtt/codec
 endif
 
 XI_CFLAGS += -I./ \
