@@ -25,9 +25,6 @@
 #include "xi_layer_factory.h"
 #include "xi_layer_factory_conf.h"
 #include "xi_layer_default_allocators.h"
-#include "xi_http_layer.h"
-#include "xi_http_layer_data.h"
-#include "xi_csv_layer.h"
 #include "xi_connection_data.h"
 
 #ifdef __cplusplus
@@ -41,6 +38,11 @@ extern "C" {
 //-----------------------------------------------------------------------
 // HELPER FUNCTIONS
 //-----------------------------------------------------------------------
+#ifndef XI_MQTT_ENABLED
+
+#include "xi_http_layer.h"
+#include "xi_http_layer_data.h"
+#include "xi_csv_layer.h"
 
 xi_value_type_t xi_get_value_type( xi_datapoint_t* p )
 {
@@ -159,6 +161,7 @@ char* xi_value_pointer_str( xi_datapoint_t* p )
       return NULL;
     }
 }
+#endif // XI_MQTT_ENABLED
 
 void xi_set_network_timeout( uint32_t timeout )
 {
@@ -193,7 +196,10 @@ enum LAYERS_ID
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define CONNECTION_SCHEME_1_DATA IO_LAYER, HTTP_LAYER, CSV_LAYER
+#define CONNECTION_SCHEME_2_DATA IO_LAYER, MQTT_LAYER
+
 DEFINE_CONNECTION_SCHEME( CONNECTION_SCHEME_1, CONNECTION_SCHEME_1_DATA );
+DEFINE_CONNECTION_SCHEME( CONNECTION_SCHEME_2, CONNECTION_SCHEME_2_DATA );
 
 #if XI_IO_LAYER == XI_IO_POSIX
 
@@ -282,6 +288,8 @@ BEGIN_FACTORY_CONF()
                                , &default_layer_heap_alloc, &default_layer_heap_free )
     , FACTORY_ENTRY( CSV_LAYER, &placement_layer_pass_create, &placement_layer_pass_delete
                            , &default_layer_heap_alloc, &default_layer_heap_free )
+    , FACTORY_ENTRY( MQTT_LAYER, &placement_layer_pass_create, &placement_layer_pass_delete
+                           , &default_layer_heap_alloc, &default_layer_heap_free )
 END_FACTORY_CONF()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +300,8 @@ END_FACTORY_CONF()
 //-----------------------------------------------------------------------
 
 xi_context_t* xi_create_context(
-      xi_protocol_t protocol, const char* api_key
+      xi_protocol_t protocol
+    , const char* api_key
     , xi_feed_id_t feed_id )
 {
     // allocate the structure to store new context
@@ -319,6 +328,7 @@ xi_context_t* xi_create_context(
 
     switch( protocol )
     {
+        #ifndef XI_MQTT_ENABLED
         case XI_HTTP:
             {
                 // @TODO make a configurable pool of these
@@ -344,10 +354,23 @@ xi_context_t* xi_create_context(
                 ret->layer_chain = create_and_connect_layers( CONNECTION_SCHEME_1, user_datas, CONNECTION_SCHEME_LENGTH( CONNECTION_SCHEME_1 ) );
             }
             break;
+        #else  // XI_MQTT_ENABLED
+        case XI_MQTT:
+            {
+                // allocate staticly
+                static xi_mqtt_layer_data_t    mqtt_layer_data;
+
+                // clean the structures
+                memset( &mqtt_layer_data, 0, sizeof( xi_mqtt_layer_data_t ) );
+
+                void* user_datas[] = { 0, ( void* ) &mqtt_layer_data };
+                ret->layer_chain = create_and_connect_layers( CONNECTION_SCHEME_2, user_datas, CONNECTION_SCHEME_LENGTH( CONNECTION_SCHEME_2 ) );
+            }
+            break;
+        #endif // XI_MQTT_ENABLED
         default:
             goto err_handling;
     }
-
 
     return ret;
 
@@ -371,9 +394,15 @@ void xi_delete_context( xi_context_t* context )
 
     switch( context->protocol )
     {
+        #ifndef XI_MQTT_ENABLED
         case XI_HTTP:
             destroy_and_disconnect_layers( &( context->layer_chain ), CONNECTION_SCHEME_LENGTH( CONNECTION_SCHEME_1 ) );
             break;
+        #else // XI_MQTT_ENABLED
+        case XI_MQTT:
+            destroy_and_disconnect_layers( &( context->layer_chain ), CONNECTION_SCHEME_LENGTH( CONNECTION_SCHEME_2 ) );
+            break;
+        #endif // XI_MQTT_ENABLED
         default:
             assert( 0 && "not yet implemented!" );
             break;
@@ -1112,9 +1141,32 @@ const xi_context_t* xi_nob_datapoint_delete_range(
 #endif // XI_NOB_ENABLED
 #else  // XI_MQTT_ENABLED
 
-// here goes the mqtt api
+#include "message.h"
+
+#ifndef XI_NOB_ENABLED // blocking version
+
+extern const xi_response_t* xi_nob_mqtt_publish(
+      xi_context_t* xi
+    , const char* topic
+    , const char* msg )
+{
+    // first connect
+    mqtt_message_t connect;
+
+    connect.common.retain   = MQTT_RETAIN_FALSE;
+    connect.common.qos      = MQTT_QOS_AT_MOST_ONCE;
+    connect.common.dup      = MQTT_DUP_FALSE;
+    connect.common.type     = MQTT_TYPE_CONNECT;
+    connect.common.length   = 0; // ?????????
 
 
+
+    return 0;
+}
+
+#else // XI_NOB_ENABLED
+
+#endif // XI_NOB_ENABLED
 #endif // XI_MQTT_ENABLED
 
 #ifdef __cplusplus

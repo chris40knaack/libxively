@@ -5,12 +5,16 @@ XI_SOURCES = $(wildcard *.c)
 
 XI_LAYER_DIRS := io/$(XI_IO_LAYER)
 
+$(info, $(XI_IO_LAYER))
+
 ifeq ($(XI_NOB_ENABLED),true)
     XI_LAYER_DIRS += nob
 endif
 
 ifeq ($(XI_MQTT_ENABLED),true)
     XI_LAYER_DIRS += mqtt/layer mqtt/codec
+else
+	XI_LAYER_DIRS += csv http
 endif
 
 XI_CFLAGS += -I./ \
