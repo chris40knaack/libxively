@@ -315,6 +315,7 @@ extern void xi_delete_context( xi_context_t* context );
 #define XI_NOB_ENABLED 1
 #endif
 
+#ifndef XI_MQTT_ENABLED
 #ifndef XI_NOB_ENABLED
 /**
  * \brief   Update Xively feed
@@ -465,7 +466,12 @@ extern const xi_context_t* xi_nob_datapoint_delete(
 extern const xi_context_t* xi_nob_datapoint_delete_range(
           xi_context_t* xi, xi_feed_id_t feed_id, const char * datastream_id
         , const xi_timestamp_t* start, const xi_timestamp_t* end );
-#endif // XI_NOB_ENABLED
+#endif  // XI_NOB_ENABLED
+#else   // XI_MQTT_ENABLED
+
+// here goes the mqtt api declaration
+
+#endif  // XI_MQTT_ENABLED
 
 #ifdef __cplusplus
 }

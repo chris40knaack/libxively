@@ -383,6 +383,7 @@ void xi_delete_context( xi_context_t* context )
     XI_SAFE_FREE( context );
 }
 
+#ifndef XI_MQTT_ENABLED
 #ifndef XI_NOB_ENABLED
 const xi_response_t* xi_feed_get(
           xi_context_t* xi
@@ -1109,6 +1110,12 @@ const xi_context_t* xi_nob_datapoint_delete_range(
     return xi;
 }
 #endif // XI_NOB_ENABLED
+#else  // XI_MQTT_ENABLED
+
+// here goes the mqtt api
+
+
+#endif // XI_MQTT_ENABLED
 
 #ifdef __cplusplus
 }
