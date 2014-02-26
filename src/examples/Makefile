@@ -2,7 +2,12 @@ LIBXIVELY := $(shell git rev-parse --show-toplevel)
 
 include $(LIBXIVELY)/Makefile.include
 
-XI_EXAMPLE_SOURCES = $(wildcard *.c)
+ifeq ($(XI_MQTT_ENABLED),true)
+	XI_EXAMPLE_SOURCES = mqtt_connect_and_publish.c
+else
+	XI_EXAMPLE_SOURCES = feed_get.c
+endif
+
 XI_CFLAGS += -I../libxively/
 XI_EXAMPLES = $(addprefix $(XI_BINDIR)/,$(XI_EXAMPLE_SOURCES:.c=))
 
