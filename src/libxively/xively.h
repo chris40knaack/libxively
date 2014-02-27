@@ -20,6 +20,14 @@
 extern "C" {
 #endif
 
+#if 0
+#define XI_NOB_ENABLED 1
+#endif
+
+#if 1
+#define XI_MQTT_ENABLED 1
+#endif
+
 //-----------------------------------------------------------------------
 // TYPES AND STRUCTURES
 //-----------------------------------------------------------------------
@@ -326,10 +334,6 @@ extern xi_context_t* xi_create_context(
  *   when the application is intending to terminate or stop using the library.
  */
 extern void xi_delete_context( xi_context_t* context );
-
-#if 0
-#define XI_NOB_ENABLED 1
-#endif
 
 #ifndef XI_MQTT_ENABLED
 #ifndef XI_NOB_ENABLED

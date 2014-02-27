@@ -22,24 +22,24 @@ size_t mqtt_serialiser_size(
 {
     size_t len = 1;
 
-    if ( message->common.length <= 127 )
+    if ( message->common.remaining_length <= 127 )
     {
         len += 1;
     }
-    else if ( message->common.length <= 16383 )
+    else if ( message->common.remaining_length <= 16383 )
     {
         len += 2;
     }
-    else if ( message->common.length <= 2097151 )
+    else if ( message->common.remaining_length <= 2097151 )
     {
         len += 3;
     }
-    else if ( message->common.length <= 268435455 )
+    else if ( message->common.remaining_length <= 268435455 )
     {
         len += 4;
     }
 
-    if ( message->common.type == MQTT_TYPE_CONNECT )
+    if ( message->common.common_u.common_bits.type == MQTT_TYPE_CONNECT )
     {
         len += 8;
 
@@ -65,7 +65,7 @@ size_t mqtt_serialiser_size(
             len += message->connect.will_message.length;
         }
     }
-    else if ( message->common.type == MQTT_TYPE_CONNACK )
+    else if ( message->common.common_u.common_bits.type == MQTT_TYPE_CONNACK )
     {
         len += 2;
     }
@@ -81,12 +81,9 @@ mqtt_serialiser_rc_t mqtt_serialiser_write(
 {
     unsigned int offset = 0;
 
-    buffer[ offset++ ] = message->common.retain +
-                    ( message->common.qos << 1 ) +
-                    ( message->common.dup << 3 ) +
-                    ( message->common.type << 4 );
+    buffer[ offset++ ] = message->common.common_u.common_value;
 
-    uint32_t remaining_length = message->common.length;
+    uint32_t remaining_length = message->common.remaining_length;
 
     do
     {
@@ -94,16 +91,14 @@ mqtt_serialiser_rc_t mqtt_serialiser_write(
         remaining_length >>= 7;
     } while ( remaining_length > 0 );
 
-    switch ( message->common.type )
+    switch ( message->common.common_u.common_bits.type )
     {
         case MQTT_TYPE_CONNECT:
         {
             WRITE_STRING( message->connect.protocol_name );
 
-            buffer[offset++] = message->connect.protocol_version;
-
-            buffer[offset++] = message->connect.flags_u.flags_value;
-
+            buffer[ offset++ ] = message->connect.protocol_version;
+            buffer[ offset++ ] = message->connect.flags_u.flags_value;
             buffer[ offset++ ] = message->connect.keep_alive >> 8;
             buffer[ offset++ ] = message->connect.keep_alive & 0xff;
 

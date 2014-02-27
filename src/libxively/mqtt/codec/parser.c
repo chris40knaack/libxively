@@ -100,7 +100,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
     YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ );
 
-    message->common_u.common_value = src.data_ptr[ src.curr_pos ];
+    message->common.common_u.common_value = src.data_ptr[ src.curr_pos ];
     src.curr_pos += 1;
 
     // remaining length
@@ -125,9 +125,9 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
       EXIT( cs, LAYER_STATE_ERROR )
     }
 
-    message->remaining_length = parser->remaining_length;
+    message->common.remaining_length = parser->remaining_length;
 
-    if ( message->common_u.common_bits.type == MQTT_TYPE_CONNECT )
+    if ( message->common.common_u.common_bits.type == MQTT_TYPE_CONNECT )
     {
         READ_STRING( message->connect.protocol_name );
 
@@ -177,7 +177,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common_u.common_bits.type == MQTT_TYPE_CONNACK )
+    else if ( message->common.common_u.common_bits.type == MQTT_TYPE_CONNACK )
     {
         YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ );
 
@@ -191,7 +191,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common_u.common_bits.type == MQTT_TYPE_PUBLISH )
+    else if ( message->common.common_u.common_bits.type == MQTT_TYPE_PUBLISH )
     {
         READ_STRING( message->publish.topic_name );
 
@@ -209,7 +209,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common_u.common_bits.type == MQTT_TYPE_PUBREC )
+    else if ( message->common.common_u.common_bits.type == MQTT_TYPE_PUBREC )
     {
         YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ )
 
@@ -223,7 +223,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common_u.common_bits.type == MQTT_TYPE_PUBREL )
+    else if ( message->common.common_u.common_bits.type == MQTT_TYPE_PUBREL )
     {
         YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ );
 
@@ -237,7 +237,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common_u.common_bits.type == MQTT_TYPE_PUBCOMP )
+    else if ( message->common.common_u.common_bits.type == MQTT_TYPE_PUBCOMP )
     {
         YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ );
 

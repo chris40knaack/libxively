@@ -1153,23 +1153,24 @@ extern const xi_response_t* xi_nob_mqtt_publish(
     // first connect
     mqtt_message_t connect;
 
-    connect.common.retain           = MQTT_RETAIN_FALSE;
-    connect.common.qos              = MQTT_QOS_AT_MOST_ONCE;
-    connect.common.dup              = MQTT_DUP_FALSE;
-    connect.common.type             = MQTT_TYPE_CONNECT;
-    connect.common.length           = 0; // ?????????
+    connect.common.common_u.common_bits.retain     = MQTT_RETAIN_FALSE;
+    connect.common.common_u.common_bits.qos        = MQTT_QOS_AT_MOST_ONCE;
+    connect.common.common_u.common_bits.dup        = MQTT_DUP_FALSE;
+    connect.common.common_u.common_bits.type       = MQTT_TYPE_CONNECT;
+    connect.common.remaining_length       = 0; // ?????????
 
     memcpy( connect.connect.protocol_name.data, "MQIsdp", 6 );
-    connect.connect.protocol_name.length    = 6;
-    connect.connect.protocol_version        = 3;
-    connect.connect.flags.username_follows  = 0;
-    connect.connect.flags.password_follows  = 0;
-    connect.connect.flags.will_retain       = 0;
-    connect.connect.flags.will_qos          = 0;
-    connect.connect.flags.will              = 0;
-    connect.connect.flags.clean_session     = 0;
+    connect.connect.protocol_name.length                    = 6;
+    connect.connect.protocol_version                        = 3;
 
-    connect.connect.keep_alive              = 0;
+    connect.connect.flags_u.flags_bits.username_follows     = 0;
+    connect.connect.flags_u.flags_bits.password_follows     = 0;
+    connect.connect.flags_u.flags_bits.will_retain          = 0;
+    connect.connect.flags_u.flags_bits.will_qos             = 0;
+    connect.connect.flags_u.flags_bits.will                 = 0;
+    connect.connect.flags_u.flags_bits.clean_session        = 0;
+
+    connect.connect.keep_alive                              = 0;
 
     {
         const char client_id[] = "xi_test_client";
