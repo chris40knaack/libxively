@@ -46,19 +46,19 @@ size_t mqtt_serialiser_size(
         len += message->connect.protocol_name.length;
         len += message->connect.client_id.length;
 
-        if ( message->connect.flags.username_follows )
+        if ( message->connect.flags_u.flags_bits.username_follows )
         {
             len += 2;
             len += message->connect.username.length;
         }
 
-        if ( message->connect.flags.password_follows )
+        if ( message->connect.flags_u.flags_bits.password_follows )
         {
             len += 2;
             len += message->connect.password.length;
         }
 
-        if ( message->connect.flags.will )
+        if ( message->connect.flags_u.flags_bits.will )
         {
             len += 4;
             len += message->connect.will_topic.length;
@@ -102,31 +102,25 @@ mqtt_serialiser_rc_t mqtt_serialiser_write(
 
             buffer[offset++] = message->connect.protocol_version;
 
-            buffer[offset++] =
-                ( message->connect.flags.username_follows << 7 ) +
-                ( message->connect.flags.password_follows << 6 ) +
-                ( message->connect.flags.will_retain      << 5 ) +
-                ( message->connect.flags.will_qos         << 3 ) +
-                ( message->connect.flags.will             << 2 ) +
-                ( message->connect.flags.clean_session    << 1 );
+            buffer[offset++] = message->connect.flags_u.flags_value;
 
             buffer[ offset++ ] = message->connect.keep_alive >> 8;
             buffer[ offset++ ] = message->connect.keep_alive & 0xff;
 
             WRITE_STRING( message->connect.client_id );
 
-            if ( message->connect.flags.will )
+            if ( message->connect.flags_u.flags_bits.will )
             {
                 WRITE_STRING( message->connect.will_topic );
                 WRITE_STRING( message->connect.will_message );
             }
 
-            if ( message->connect.flags.username_follows )
+            if ( message->connect.flags_u.flags_bits.username_follows )
             {
                 WRITE_STRING( message->connect.username );
             }
 
-            if ( message->connect.flags.password_follows )
+            if ( message->connect.flags_u.flags_bits.password_follows )
             {
                 WRITE_STRING( message->connect.password );
             }

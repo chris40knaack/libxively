@@ -100,11 +100,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
     YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ );
 
-    message->common.retain = (src.data_ptr[ src.curr_pos ] >> 0) & 0x01;
-    message->common.qos    = (src.data_ptr[ src.curr_pos ] >> 1) & 0x03;
-    message->common.dup    = (src.data_ptr[ src.curr_pos ] >> 3) & 0x01;
-    message->common.type   = (src.data_ptr[ src.curr_pos ] >> 4) & 0x0f;
-
+    message->common_u.common_value = src.data_ptr[ src.curr_pos ];
     src.curr_pos += 1;
 
     // remaining length
@@ -129,9 +125,9 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
       EXIT( cs, LAYER_STATE_ERROR )
     }
 
-    message->common.length = parser->remaining_length;
+    message->remaining_length = parser->remaining_length;
 
-    if ( message->common.type == MQTT_TYPE_CONNECT )
+    if ( message->common_u.common_bits.type == MQTT_TYPE_CONNECT )
     {
         READ_STRING( message->connect.protocol_name );
 
@@ -143,12 +139,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ );
 
-        message->connect.flags.username_follows = (src.data_ptr[ src.curr_pos ] >> 7) & 0x01;
-        message->connect.flags.password_follows = (src.data_ptr[ src.curr_pos ] >> 6) & 0x01;
-        message->connect.flags.will_retain      = (src.data_ptr[ src.curr_pos ] >> 5) & 0x01;
-        message->connect.flags.will_qos         = (src.data_ptr[ src.curr_pos ] >> 4) & 0x02;
-        message->connect.flags.will             = (src.data_ptr[ src.curr_pos ] >> 2) & 0x01;
-        message->connect.flags.clean_session    = (src.data_ptr[ src.curr_pos ] >> 1) & 0x01;
+        message->connect.flags_u.flags_value = src.data_ptr[ src.curr_pos ];
 
         src.curr_pos += 1;
 
@@ -164,29 +155,29 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         READ_STRING( message->connect.client_id );
 
-        if ( message->connect.flags.will )
+        if ( message->connect.flags_u.flags_bits.will )
         {
             READ_STRING( message->connect.will_topic );
         }
 
-        if ( message->connect.flags.will )
+        if ( message->connect.flags_u.flags_bits.will )
         {
             READ_STRING( message->connect.will_message );
         }
 
-        if ( message->connect.flags.username_follows )
+        if ( message->connect.flags_u.flags_bits.username_follows )
         {
             READ_STRING( message->connect.username );
         }
 
-        if ( message->connect.flags.password_follows )
+        if ( message->connect.flags_u.flags_bits.password_follows )
         {
             READ_STRING( message->connect.password );
         }
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common.type == MQTT_TYPE_CONNACK )
+    else if ( message->common_u.common_bits.type == MQTT_TYPE_CONNACK )
     {
         YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ );
 
@@ -200,7 +191,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common.type == MQTT_TYPE_PUBLISH )
+    else if ( message->common_u.common_bits.type == MQTT_TYPE_PUBLISH )
     {
         READ_STRING( message->publish.topic_name );
 
@@ -218,7 +209,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common.type == MQTT_TYPE_PUBREC )
+    else if ( message->common_u.common_bits.type == MQTT_TYPE_PUBREC )
     {
         YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ )
 
@@ -232,7 +223,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common.type == MQTT_TYPE_PUBREL )
+    else if ( message->common_u.common_bits.type == MQTT_TYPE_PUBREL )
     {
         YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ );
 
@@ -246,7 +237,7 @@ layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* messag
 
         EXIT( cs, LAYER_STATE_OK );
     }
-    else if ( message->common.type == MQTT_TYPE_PUBCOMP )
+    else if ( message->common_u.common_bits.type == MQTT_TYPE_PUBCOMP )
     {
         YIELD_ON( cs, ( (src.curr_pos - src.real_size) == 0 ), LAYER_STATE_WANT_READ );
 

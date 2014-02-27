@@ -51,16 +51,19 @@ typedef struct mqtt_topicpair_s {
 } mqtt_topicpair_t;
 
 #define MQTT_MESSAGE_COMMON_FIELDS \
-  mqtt_retain_t retain; \
-  mqtt_qos_t qos; \
-  mqtt_dup_t dup; \
-  mqtt_type_t type; \
-  size_t length;
+union { \
+    struct { \
+        unsigned int retain : 1; \
+        unsigned int qos : 2; \
+        unsigned int dup : 1; \
+        unsigned int type : 4; \
+    } common_bits; \
+    uint8_t common_value;\
+} common_u; \
+uint32_t remaining_length;
 
 typedef union mqtt_message_u {
-  struct {
     MQTT_MESSAGE_COMMON_FIELDS
-  } common;
 
   struct {
     MQTT_MESSAGE_COMMON_FIELDS
@@ -68,14 +71,18 @@ typedef union mqtt_message_u {
     mqtt_buffer_t protocol_name;
     uint8_t protocol_version;
 
-    struct {
-      char username_follows;
-      char password_follows;
-      char will_retain;
-      char will_qos;
-      char will;
-      char clean_session;
-    } flags;
+    union {
+        struct {
+          unsigned int username_follows : 1;
+          unsigned int password_follows : 1;
+          unsigned int will_retain      : 1;
+          unsigned int will_qos         : 2;
+          unsigned int will             : 1;
+          unsigned int clean_session    : 1;
+          unsigned int reserverd        : 1;
+        } flags_bits;
+        uint8_t flags_value;
+    } flags_u;
 
     uint16_t keep_alive;
 
