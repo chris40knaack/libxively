@@ -1150,6 +1150,23 @@ extern const xi_response_t* xi_nob_mqtt_publish(
     , const char* topic
     , const char* msg )
 {
+   // we shall need it later
+    layer_state_t state = LAYER_STATE_OK;
+
+    // extract the input layer
+    layer_t* input_layer    = xi->layer_chain.top;
+    layer_t* io_layer       = xi->layer_chain.bottom;
+
+    { // init & connect
+        state = CALL_ON_SELF_INIT( io_layer, 0, LAYER_HINT_NONE );
+        if( state != LAYER_STATE_OK ) { return 0; }
+
+        xi_connection_data_t conn_data = { XI_HOST, XI_PORT };
+
+        state = CALL_ON_SELF_CONNECT( io_layer, ( void *) &conn_data, LAYER_HINT_NONE );
+        if( state != LAYER_STATE_OK ) { return 0; }
+    }
+
     // first connect
     mqtt_message_t connect;
 
@@ -1157,7 +1174,7 @@ extern const xi_response_t* xi_nob_mqtt_publish(
     connect.common.common_u.common_bits.qos        = MQTT_QOS_AT_MOST_ONCE;
     connect.common.common_u.common_bits.dup        = MQTT_DUP_FALSE;
     connect.common.common_u.common_bits.type       = MQTT_TYPE_CONNECT;
-    connect.common.remaining_length       = 0; // ?????????
+    connect.common.remaining_length                = 0; // ?????????
 
     memcpy( connect.connect.protocol_name.data, "MQIsdp", 6 );
     connect.connect.protocol_name.length                    = 6;
@@ -1177,6 +1194,15 @@ extern const xi_response_t* xi_nob_mqtt_publish(
         connect.connect.client_id.length = sizeof( client_id ) - 1;
         memcpy( connect.connect.client_id.data, client_id, sizeof( client_id ) - 1 );
     }
+
+    state = CALL_ON_SELF_DATA_READY( input_layer, ( void *) &connect, LAYER_HINT_NONE );
+
+    if( state == LAYER_STATE_OK )
+    {
+        CALL_ON_SELF_ON_DATA_READY( io_layer, ( void *) 0, LAYER_HINT_NONE );
+    }
+
+    mqtt_message_dump( ( mqtt_message_t* ) &input_layer->user_data );
 
     return 0;
 }

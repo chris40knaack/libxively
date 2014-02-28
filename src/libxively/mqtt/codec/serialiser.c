@@ -18,26 +18,9 @@ void mqtt_serialiser_init( mqtt_serialiser_t* serialiser )
 
 size_t mqtt_serialiser_size(
       mqtt_serialiser_t* serialiser
-    , mqtt_message_t* message )
+    , const mqtt_message_t* message )
 {
     size_t len = 1;
-
-    if ( message->common.remaining_length <= 127 )
-    {
-        len += 1;
-    }
-    else if ( message->common.remaining_length <= 16383 )
-    {
-        len += 2;
-    }
-    else if ( message->common.remaining_length <= 2097151 )
-    {
-        len += 3;
-    }
-    else if ( message->common.remaining_length <= 268435455 )
-    {
-        len += 4;
-    }
 
     if ( message->common.common_u.common_bits.type == MQTT_TYPE_CONNECT )
     {
@@ -70,12 +53,31 @@ size_t mqtt_serialiser_size(
         len += 2;
     }
 
+    int32_t remaining_length = len - 1;
+
+    if ( remaining_length <= 127 )
+    {
+        len += 1;
+    }
+    else if ( remaining_length <= 16383 )
+    {
+        len += 2;
+    }
+    else if ( remaining_length <= 2097151 )
+    {
+        len += 3;
+    }
+    else if ( remaining_length <= 268435455 )
+    {
+        len += 4;
+    }
+
     return len;
 }
 
 mqtt_serialiser_rc_t mqtt_serialiser_write(
       mqtt_serialiser_t* serialiser
-    , mqtt_message_t* message
+    , const mqtt_message_t* message
     , uint8_t* buffer
     , size_t len )
 {

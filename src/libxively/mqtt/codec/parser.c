@@ -90,7 +90,7 @@ void mqtt_parser_buffer( mqtt_parser_t* parser, uint8_t* buffer, size_t buffer_l
 /**
  * @TODO add memory management so that the fields are allocated dynamically only when required
  */
-layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* message, uint8_t* data, size_t len, size_t* nread )
+layer_state_t mqtt_parser_execute( mqtt_parser_t* parser, mqtt_message_t* message, const uint8_t* data, size_t len, size_t* nread )
 {
     static uint16_t cs                 = 0; // local coroutine state to prereserve that better we should keep it outside that function
     const_data_descriptor_t src        = { ( char* ) data, len, len, 0 };

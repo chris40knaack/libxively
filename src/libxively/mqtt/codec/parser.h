@@ -57,6 +57,6 @@ typedef struct mqtt_parser_s {
 
 void mqtt_parser_init(mqtt_parser_t* parser);
 void mqtt_parser_buffer(mqtt_parser_t* parser, uint8_t* buffer, size_t buffer_length);
-layer_state_t mqtt_parser_execute(mqtt_parser_t* parser, mqtt_message_t* message, uint8_t* data, size_t len, size_t* nread);
+layer_state_t mqtt_parser_execute(mqtt_parser_t* parser, mqtt_message_t* message, const uint8_t* data, size_t len, size_t* nread);
 
 #endif
