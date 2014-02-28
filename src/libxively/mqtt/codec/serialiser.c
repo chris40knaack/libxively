@@ -85,7 +85,7 @@ mqtt_serialiser_rc_t mqtt_serialiser_write(
 
     buffer[ offset++ ] = message->common.common_u.common_value;
 
-    uint32_t remaining_length = message->common.remaining_length;
+    uint32_t remaining_length = len - 1;//message->common.remaining_length;
 
     do
     {

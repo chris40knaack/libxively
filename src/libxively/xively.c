@@ -188,18 +188,28 @@ uint32_t xi_get_network_timeout( void )
 enum LAYERS_ID
 {
       IO_LAYER = 0
+#ifndef XI_MQTT_ENABLED
     , HTTP_LAYER
     , CSV_LAYER
+#else // XI_MQTT_ENABLED
     , MQTT_LAYER
+#endif // XI_MQTT_ENABLED
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifndef XI_MQTT_ENABLED
 #define CONNECTION_SCHEME_1_DATA IO_LAYER, HTTP_LAYER, CSV_LAYER
+#else // XI_MQTT_ENABLED
 #define CONNECTION_SCHEME_2_DATA IO_LAYER, MQTT_LAYER
+#endif // XI_MQTT_ENABLED
 
+#ifndef XI_MQTT_ENABLED
 DEFINE_CONNECTION_SCHEME( CONNECTION_SCHEME_1, CONNECTION_SCHEME_1_DATA );
+#else // XI_MQTT_ENABLED
 DEFINE_CONNECTION_SCHEME( CONNECTION_SCHEME_2, CONNECTION_SCHEME_2_DATA );
+#endif // XI_MQTT_ENABLED
 
 #if XI_IO_LAYER == XI_IO_POSIX
 
@@ -284,12 +294,15 @@ DEFINE_CONNECTION_SCHEME( CONNECTION_SCHEME_2, CONNECTION_SCHEME_2_DATA );
 BEGIN_FACTORY_CONF()
       FACTORY_ENTRY( IO_LAYER, &placement_layer_pass_create, &placement_layer_pass_delete
                              , &default_layer_heap_alloc, &default_layer_heap_free )
+#ifndef XI_MQTT_ENABLED
     , FACTORY_ENTRY( HTTP_LAYER, &placement_layer_pass_create, &placement_layer_pass_delete
                                , &default_layer_heap_alloc, &default_layer_heap_free )
     , FACTORY_ENTRY( CSV_LAYER, &placement_layer_pass_create, &placement_layer_pass_delete
                            , &default_layer_heap_alloc, &default_layer_heap_free )
+#else // XI_MQTT_ENABLED
     , FACTORY_ENTRY( MQTT_LAYER, &placement_layer_pass_create, &placement_layer_pass_delete
                            , &default_layer_heap_alloc, &default_layer_heap_free )
+#endif // XI_MQTT_ENABLED
 END_FACTORY_CONF()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1169,6 +1182,7 @@ extern const xi_response_t* xi_nob_mqtt_publish(
 
     // first connect
     mqtt_message_t connect;
+    memset( &connect, 0, sizeof( mqtt_message_t ) );
 
     connect.common.common_u.common_bits.retain     = MQTT_RETAIN_FALSE;
     connect.common.common_u.common_bits.qos        = MQTT_QOS_AT_MOST_ONCE;
@@ -1199,10 +1213,17 @@ extern const xi_response_t* xi_nob_mqtt_publish(
 
     if( state == LAYER_STATE_OK )
     {
-        CALL_ON_SELF_ON_DATA_READY( io_layer, ( void *) 0, LAYER_HINT_NONE );
+        state = CALL_ON_SELF_ON_DATA_READY( io_layer, ( void *) 0, LAYER_HINT_NONE );
+    }
+
+    if( state == LAYER_STATE_OK )
+    {
+        //state = CALL_ON_SELF_DATA_READY(  )
     }
 
     mqtt_message_dump( ( mqtt_message_t* ) &input_layer->user_data );
+
+    CALL_ON_SELF_CLOSE( input_layer );
 
     return 0;
 }

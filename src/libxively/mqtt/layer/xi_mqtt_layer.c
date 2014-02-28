@@ -25,7 +25,7 @@ layer_state_t xi_mqtt_layer_data_ready(
     int len = mqtt_serialiser_size( &serializer, msg );
 
     uint8_t buffer[ 256 ];
-    data_descriptor_t data_descriptor = { ( char* ) buffer, 256, 255, 0 };
+    data_descriptor_t data_descriptor = { ( char* ) buffer, len, len, 0 };
 
     mqtt_serialiser_rc_t rc = mqtt_serialiser_write( &serializer, msg, buffer, len );
 
@@ -43,7 +43,7 @@ layer_state_t xi_mqtt_layer_on_data_ready(
     const const_data_descriptor_t* data_descriptor = ( const const_data_descriptor_t* ) data;
     xi_mqtt_layer_data_t* layer_data = ( xi_mqtt_layer_data_t* ) context->self->user_data;
 
-    layer_state_t state = LAYER_STATE_OK;
+    layer_state_t state = LAYER_STATE_OK; // info@barbados.wroclaw.pl 62 Ip
     mqtt_parser_t parser;
 
     BEGIN_CORO( cs )
