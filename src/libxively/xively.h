@@ -126,6 +126,7 @@ typedef struct {
 
 #else   // XI_MQTT_ENABLED
 #include "message.h"
+#include "xi_mqtt_layer_data.h"
 typedef struct {
     mqtt_message_t mqtt_message;
 } mqtt_response_t;

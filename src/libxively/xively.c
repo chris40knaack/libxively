@@ -1221,7 +1221,8 @@ extern const xi_response_t* xi_nob_mqtt_publish(
         //state = CALL_ON_SELF_DATA_READY(  )
     }
 
-    mqtt_message_dump( ( mqtt_message_t* ) &input_layer->user_data );
+    xi_mqtt_layer_data_t* test = ( xi_mqtt_layer_data_t* ) input_layer->user_data;
+    mqtt_message_dump( &test->msg );
 
     CALL_ON_SELF_CLOSE( input_layer );
 

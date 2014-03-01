@@ -69,7 +69,7 @@ layer_state_t xi_mqtt_layer_on_data_ready(
 layer_state_t xi_mqtt_layer_close(
     layer_connectivity_t* context )
 {
-    return LAYER_STATE_OK;
+    return CALL_ON_PREV_CLOSE( context->self );
 }
 
 layer_state_t xi_mqtt_layer_on_close(

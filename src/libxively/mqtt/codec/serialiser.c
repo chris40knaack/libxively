@@ -24,9 +24,12 @@ size_t mqtt_serialiser_size(
 
     if ( message->common.common_u.common_bits.type == MQTT_TYPE_CONNECT )
     {
-        len += 8;
+        len += 8; // protocol name
+        len += 1; // protocol version
+        len += 1; // connect flags
+        len += 2; // keep alive timer
 
-        len += message->connect.protocol_name.length;
+        len += 2; // size
         len += message->connect.client_id.length;
 
         if ( message->connect.flags_u.flags_bits.username_follows )
@@ -85,7 +88,7 @@ mqtt_serialiser_rc_t mqtt_serialiser_write(
 
     buffer[ offset++ ] = message->common.common_u.common_value;
 
-    uint32_t remaining_length = len - 1;//message->common.remaining_length;
+    uint32_t remaining_length = len - 2;//message->common.remaining_length;
 
     do
     {
