@@ -39,11 +39,14 @@ layer_state_t xi_mqtt_layer_on_data_ready(
     , const void* data
     , const layer_hint_t hint )
 {
-    static uint16_t cs = 0;
+    // must survive the yield
+    static uint16_t cs          = 0;
+    static layer_state_t state  = LAYER_STATE_OK; //
+
+    // tmp variables for
     const const_data_descriptor_t* data_descriptor = ( const const_data_descriptor_t* ) data;
     xi_mqtt_layer_data_t* layer_data = ( xi_mqtt_layer_data_t* ) context->self->user_data;
 
-    layer_state_t state = LAYER_STATE_OK; // info@barbados.wroclaw.pl 62 Ip
     mqtt_parser_t parser;
 
     BEGIN_CORO( cs )
@@ -58,7 +61,7 @@ layer_state_t xi_mqtt_layer_on_data_ready(
             , ( const uint8_t* ) data_descriptor->data_ptr
             , data_descriptor->real_size, 0 );
 
-        YIELD_UNTIL( state, ( state == LAYER_STATE_WANT_READ ), LAYER_STATE_WANT_READ );
+        YIELD_UNTIL( cs, ( state == LAYER_STATE_WANT_READ ), LAYER_STATE_WANT_READ );
     } while( state == LAYER_STATE_WANT_READ );
 
     EXIT( cs, LAYER_STATE_OK );
