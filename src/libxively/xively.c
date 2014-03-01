@@ -1181,48 +1181,62 @@ extern const xi_response_t* xi_nob_mqtt_publish(
     }
 
     // first connect
-    mqtt_message_t connect;
-    memset( &connect, 0, sizeof( mqtt_message_t ) );
+    mqtt_message_t message;
+    memset( &message, 0, sizeof( mqtt_message_t ) );
 
-    connect.common.common_u.common_bits.retain     = MQTT_RETAIN_FALSE;
-    connect.common.common_u.common_bits.qos        = MQTT_QOS_AT_MOST_ONCE;
-    connect.common.common_u.common_bits.dup        = MQTT_DUP_FALSE;
-    connect.common.common_u.common_bits.type       = MQTT_TYPE_CONNECT;
-    connect.common.remaining_length                = 0; // ?????????
+    message.common.common_u.common_bits.retain     = MQTT_RETAIN_FALSE;
+    message.common.common_u.common_bits.qos        = MQTT_QOS_AT_MOST_ONCE;
+    message.common.common_u.common_bits.dup        = MQTT_DUP_FALSE;
+    message.common.common_u.common_bits.type       = MQTT_TYPE_CONNECT;
+    message.common.remaining_length                = 0; // ?????????
 
-    memcpy( connect.connect.protocol_name.data, "MQIsdp", 6 );
-    connect.connect.protocol_name.length                    = 6;
-    connect.connect.protocol_version                        = 3;
+    memcpy( message.connect.protocol_name.data, "MQIsdp", 6 );
+    message.connect.protocol_name.length                    = 6;
+    message.connect.protocol_version                        = 3;
 
-    connect.connect.flags_u.flags_bits.username_follows     = 0;
-    connect.connect.flags_u.flags_bits.password_follows     = 0;
-    connect.connect.flags_u.flags_bits.will_retain          = 0;
-    connect.connect.flags_u.flags_bits.will_qos             = 0;
-    connect.connect.flags_u.flags_bits.will                 = 0;
-    connect.connect.flags_u.flags_bits.clean_session        = 0;
+    message.connect.flags_u.flags_bits.username_follows     = 0;
+    message.connect.flags_u.flags_bits.password_follows     = 0;
+    message.connect.flags_u.flags_bits.will_retain          = 0;
+    message.connect.flags_u.flags_bits.will_qos             = 0;
+    message.connect.flags_u.flags_bits.will                 = 0;
+    message.connect.flags_u.flags_bits.clean_session        = 0;
 
-    connect.connect.keep_alive                              = 0;
+    message.connect.keep_alive                              = 0;
 
     {
         const char client_id[] = "xi_test_client";
-        connect.connect.client_id.length = sizeof( client_id ) - 1;
-        memcpy( connect.connect.client_id.data, client_id, sizeof( client_id ) - 1 );
+        message.connect.client_id.length = sizeof( client_id ) - 1;
+        memcpy( message.connect.client_id.data, client_id, sizeof( client_id ) - 1 );
     }
 
-    state = CALL_ON_SELF_DATA_READY( input_layer, ( void *) &connect, LAYER_HINT_NONE );
+    state = CALL_ON_SELF_DATA_READY( input_layer, ( void *) &message, LAYER_HINT_NONE );
 
     if( state == LAYER_STATE_OK )
     {
         state = CALL_ON_SELF_ON_DATA_READY( io_layer, ( void *) 0, LAYER_HINT_NONE );
     }
 
-    if( state == LAYER_STATE_OK )
-    {
-        //state = CALL_ON_SELF_DATA_READY(  )
-    }
-
     xi_mqtt_layer_data_t* test = ( xi_mqtt_layer_data_t* ) input_layer->user_data;
     mqtt_message_dump( &test->msg );
+
+    message.common.common_u.common_bits.type    = MQTT_TYPE_PUBLISH;
+    message.publish.topic_name.length           = strlen( topic );
+    message.publish.content.length              = strlen( msg );
+
+    memcpy(
+          message.publish.topic_name.data
+        , topic
+        , message.publish.topic_name.length );
+
+    memcpy(
+          message.publish.content.data
+        , msg
+        , message.publish.content.length );
+
+    if( state == LAYER_STATE_OK )
+    {
+        state = CALL_ON_SELF_DATA_READY( input_layer, ( void* )&message, LAYER_HINT_NONE );
+    }
 
     CALL_ON_SELF_CLOSE( input_layer );
 

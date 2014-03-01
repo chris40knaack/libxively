@@ -11,6 +11,11 @@
   offset += name.length; \
 }
 
+#define WRITE_DATA(name) { \
+    memcpy(&(buffer[offset]), name.data, name.length); \
+    offset += name.length; \
+}
+
 void mqtt_serialiser_init( mqtt_serialiser_t* serialiser )
 {
   memset( serialiser, 0, sizeof ( mqtt_serialiser_t ) );
@@ -54,6 +59,18 @@ size_t mqtt_serialiser_size(
     else if ( message->common.common_u.common_bits.type == MQTT_TYPE_CONNACK )
     {
         len += 2;
+    }
+    else if ( message->common.common_u.common_bits.type == MQTT_TYPE_PUBLISH )
+    {
+        len += 2; // size
+        len += message->publish.topic_name.length;
+
+        if( message->publish.common.common_u.common_bits.qos > 0 )
+        {
+            len += 2; // size
+        }
+
+        len += message->publish.content.length;
     }
 
     int32_t remaining_length = len - 1;
@@ -132,6 +149,21 @@ mqtt_serialiser_rc_t mqtt_serialiser_write(
         {
             buffer[ offset++ ] = message->connack._unused;
             buffer[ offset++ ] = message->connack.return_code;
+
+            break;
+        }
+
+        case MQTT_TYPE_PUBLISH:
+        {
+            WRITE_STRING( message->publish.topic_name );
+
+            if( message->common.common_u.common_bits.qos > 0 )
+            {
+                buffer[ offset++ ] = message->publish.message_id >> 8;
+                buffer[ offset++ ] = message->publish.message_id & 0xff;
+            }
+
+            WRITE_DATA( message->publish.content );
 
             break;
         }
