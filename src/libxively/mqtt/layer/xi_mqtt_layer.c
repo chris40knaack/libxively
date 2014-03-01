@@ -17,6 +17,8 @@ layer_state_t xi_mqtt_layer_data_ready(
     , const void* data
     , const layer_hint_t hint )
 {
+    XI_UNUSED( hint );
+
     const mqtt_message_t* msg = ( const mqtt_message_t* ) data;
 
     mqtt_serialiser_t serializer;
@@ -29,6 +31,11 @@ layer_state_t xi_mqtt_layer_data_ready(
 
     mqtt_serialiser_rc_t rc = mqtt_serialiser_write( &serializer, msg, buffer, len );
 
+    if( rc == MQTT_SERIALISER_RC_ERROR )
+    {
+        return LAYER_STATE_ERROR;
+    }
+
     layer_state_t state = CALL_ON_PREV_DATA_READY( context->self, ( void* ) &data_descriptor, LAYER_HINT_NONE );
 
     return state;
@@ -39,6 +46,8 @@ layer_state_t xi_mqtt_layer_on_data_ready(
     , const void* data
     , const layer_hint_t hint )
 {
+    XI_UNUSED( hint );
+
     // must survive the yield
     static uint16_t cs          = 0;
     static layer_state_t state  = LAYER_STATE_OK; //
@@ -46,8 +55,6 @@ layer_state_t xi_mqtt_layer_on_data_ready(
     // tmp variables for
     const const_data_descriptor_t* data_descriptor = ( const const_data_descriptor_t* ) data;
     xi_mqtt_layer_data_t* layer_data = ( xi_mqtt_layer_data_t* ) context->self->user_data;
-
-    mqtt_parser_t parser;
 
     BEGIN_CORO( cs )
 
@@ -72,12 +79,19 @@ layer_state_t xi_mqtt_layer_on_data_ready(
 layer_state_t xi_mqtt_layer_close(
     layer_connectivity_t* context )
 {
+    mqtt_message_t message;
+    memset( &message, 0, sizeof( mqtt_message_t ) );
+    message.common.common_u.common_bits.type = MQTT_TYPE_DISCONNECT;
+
+    CALL_ON_SELF_DATA_READY( context->self, &message, LAYER_HINT_NONE );
+
     return CALL_ON_PREV_CLOSE( context->self );
 }
 
 layer_state_t xi_mqtt_layer_on_close(
     layer_connectivity_t* context )
 {
+    XI_UNUSED( context );
     return LAYER_STATE_OK;
 }
 

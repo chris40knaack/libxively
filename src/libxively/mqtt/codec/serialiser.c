@@ -25,6 +25,8 @@ size_t mqtt_serialiser_size(
       mqtt_serialiser_t* serialiser
     , const mqtt_message_t* message )
 {
+    ( void ) serialiser;
+
     size_t len = 1;
 
     if ( message->common.common_u.common_bits.type == MQTT_TYPE_CONNECT )
@@ -71,6 +73,10 @@ size_t mqtt_serialiser_size(
         }
 
         len += message->publish.content.length;
+    }
+    else if ( message->common.common_u.common_bits.type == MQTT_TYPE_DISCONNECT )
+    {
+        // empty
     }
 
     int32_t remaining_length = len - 1;
@@ -165,6 +171,12 @@ mqtt_serialiser_rc_t mqtt_serialiser_write(
 
             WRITE_DATA( message->publish.content );
 
+            break;
+        }
+
+        case MQTT_TYPE_DISCONNECT:
+        {
+            // empty
             break;
         }
 
