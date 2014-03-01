@@ -42,6 +42,8 @@ int main( int argc, char* argv[] )
 
     const xi_response_t* response = xi_nob_mqtt_publish( xi_context, argv[ 1 ], argv[ 2 ] );
 
+    xi_delete_context( xi_context );
+
     if( response )
     {
 
