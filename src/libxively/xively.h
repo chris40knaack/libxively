@@ -24,7 +24,7 @@ extern "C" {
 #define XI_NOB_ENABLED 1
 #endif
 
-#if 1
+#if 0
 #define XI_MQTT_ENABLED 1
 #endif
 
